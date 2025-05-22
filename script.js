@@ -7,7 +7,7 @@ document.querySelectorAll(".color-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     selectedColor = btn.getAttribute("data-color");
   });
-})
+});
 
 const lineartCanvas = document.getElementById('lineart-layer');
 const colorCanvas = document.getElementById('color-layer');
@@ -46,31 +46,37 @@ function drawLineart() {
   ctx.stroke();
 }
 
-// Zeichnen
+// Zeichnen mit Linie
 let isDrawing = false;
+let lastX = 0;
+let lastY = 0;
+
 colorCanvas.addEventListener('pointerdown', (e) => {
   isDrawing = true;
-  drawPoint(e);
+  lastX = e.clientX;
+  lastY = e.clientY;
 });
+
 colorCanvas.addEventListener('pointermove', (e) => {
-  if (isDrawing) drawPoint(e);
+  if (isDrawing) {
+    drawLine(colorCtx, lastX, lastY, e.clientX, e.clientY, selectedColor);
+    socket.send(JSON.stringify(['draw-line', clientId, lastX, lastY, e.clientX, e.clientY, selectedColor]));
+    lastX = e.clientX;
+    lastY = e.clientY;
+  }
 });
+
 colorCanvas.addEventListener('pointerup', () => isDrawing = false);
 colorCanvas.addEventListener('pointercancel', () => isDrawing = false);
 
-function drawPoint(e) {
-  const x = e.clientX;
-  const y = e.clientY;
-
-  drawDot(colorCtx, x, y, selectedColor);
-  socket.send(JSON.stringify(['draw', clientId, x, y, selectedColor]));
-}
-
-function drawDot(ctx, x, y, color) {
-  ctx.fillStyle = color;
+function drawLine(ctx, x1, y1, x2, y2, color) {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 10;
+  ctx.lineCap = "round";
   ctx.beginPath();
-  ctx.arc(x, y, 10, 0, 2 * Math.PI);
-  ctx.fill();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
 }
 
 // Clear
@@ -102,20 +108,12 @@ socket.addEventListener('message', (event) => {
       clientCount = data[1];
       indexElem.innerText = `#${clientId}/${clientCount}`;
       break;
-    case 'draw':
-      const [_, id, x, y, color] = data;
-      drawDot(colorCtx, x, y, color);
+    case 'draw-line':
+      const [__, id, x1, y1, x2, y2, color] = data;
+      drawLine(colorCtx, x1, y1, x2, y2, color);
       break;
     case 'clear':
       clearColors();
       break;
   }
 });
-
-function getColor() {
-  return selectedColor;
-}
-
-
-
-//test 
