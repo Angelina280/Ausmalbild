@@ -46,16 +46,17 @@ function resizeCanvases() {
     canvas.style.width = window.innerWidth + 'px';
     canvas.style.height = window.innerHeight + 'px';
     const ctx = canvas.getContext('2d');
-    ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(dpr, dpr);
   });
 }
 
 function drawLineart() {
+  const dpr = window.devicePixelRatio || 1;
   lineartCtx.clearRect(0, 0, lineartCanvas.width, lineartCanvas.height);
 
-  const canvasWidth = lineartCanvas.width / (window.devicePixelRatio || 1);
-  const canvasHeight = lineartCanvas.height / (window.devicePixelRatio || 1);
+  const canvasWidth = lineartCanvas.width / dpr;
+  const canvasHeight = lineartCanvas.height / dpr;
 
   const imgRatio = lineartImage.width / lineartImage.height;
   const canvasRatio = canvasWidth / canvasHeight;
@@ -76,13 +77,15 @@ function drawLineart() {
   lineartCtx.drawImage(lineartImage, offsetX, offsetY, drawWidth, drawHeight);
 }
 
+// Zeichnen
 let isDrawing = false;
 let lastX = 0;
 let lastY = 0;
 
-// Touch fix: verhindert Scrollen während des Zeichnens
-colorCanvas.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+// ✨ Touch-Gesten verhindern Scrollen auf Mobilgeräten
+colorCanvas.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
 
+// Position berechnen
 function getPointerPosition(e) {
   const rect = colorCanvas.getBoundingClientRect();
   return {
@@ -109,6 +112,7 @@ colorCanvas.addEventListener('pointermove', (e) => {
 
 colorCanvas.addEventListener('pointerup', () => isDrawing = false);
 colorCanvas.addEventListener('pointercancel', () => isDrawing = false);
+colorCanvas.addEventListener('pointerout', () => isDrawing = false); // Finger verlässt die Fläche
 
 function drawLine(ctx, x1, y1, x2, y2, color, size) {
   ctx.strokeStyle = color;
@@ -129,6 +133,7 @@ function clearColors() {
   colorCtx.clearRect(0, 0, colorCanvas.width, colorCanvas.height);
 }
 
+// WebSocket-Logik
 socket.addEventListener('open', () => {
   socket.send(JSON.stringify(['*enter-room*', 'ausmalbild']));
   socket.send(JSON.stringify(['*subscribe-client-count*']));
