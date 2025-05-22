@@ -13,8 +13,12 @@ canvas {
   display: block;
 }
 
-#lineart-layer {
+#color-layer {
   z-index: 1;
+}
+
+#lineart-layer {
+  z-index: 2;
   pointer-events: none;
 }
 
