@@ -2,12 +2,19 @@ const socket = new WebSocket('https://nosch.uber.space/web-rooms/');
 let clientId = null;
 let selectedColor = "black";
 let clientCount = 0;
+let brushSize = 10; // Standard-Pinselgröße
 
-// Optional: Farbauswahl-Buttons (wenn vorhanden)
+// Farbauswahl
 document.querySelectorAll(".color-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     selectedColor = btn.getAttribute("data-color");
   });
+});
+
+// Pinselgrößen-Slider
+const brushSizeSlider = document.getElementById("brush-size");
+brushSizeSlider.addEventListener("input", () => {
+  brushSize = parseInt(brushSizeSlider.value, 10);
 });
 
 const lineartCanvas = document.getElementById('lineart-layer');
@@ -19,7 +26,7 @@ const lineartCtx = lineartCanvas.getContext('2d');
 const colorCtx = colorCanvas.getContext('2d');
 
 const lineartImage = new Image();
-lineartImage.src = 'Drache.png'; // Dein PNG-Bild mit transparentem Hintergrund
+lineartImage.src = 'Drache.png';
 
 lineartImage.onload = () => {
   resizeCanvases();
@@ -38,7 +45,6 @@ function resizeCanvases() {
   });
 }
 
-// Zeichne das PNG zentriert und skaliert auf die Linien-CANVAS
 function drawLineart() {
   lineartCtx.clearRect(0, 0, lineartCanvas.width, lineartCanvas.height);
 
@@ -64,32 +70,37 @@ function drawLineart() {
   lineartCtx.drawImage(lineartImage, offsetX, offsetY, drawWidth, drawHeight);
 }
 
-// Zeichnen mit Linie
+// Zeichnen
 let isDrawing = false;
 let lastX = 0;
 let lastY = 0;
 
 colorCanvas.addEventListener('pointerdown', (e) => {
   isDrawing = true;
-  lastX = e.clientX;
-  lastY = e.clientY;
+  const rect = colorCanvas.getBoundingClientRect();
+  lastX = e.clientX - rect.left;
+  lastY = e.clientY - rect.top;
 });
 
 colorCanvas.addEventListener('pointermove', (e) => {
-  if (isDrawing) {
-    drawLine(colorCtx, lastX, lastY, e.clientX, e.clientY, selectedColor);
-    socket.send(JSON.stringify(['draw-line', clientId, lastX, lastY, e.clientX, e.clientY, selectedColor]));
-    lastX = e.clientX;
-    lastY = e.clientY;
-  }
+  if (!isDrawing) return;
+  const rect = colorCanvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  const y = e.clientY - rect.top;
+
+  drawLine(colorCtx, lastX, lastY, x, y, selectedColor, brushSize);
+  socket.send(JSON.stringify(['draw-line', clientId, lastX, lastY, x, y, selectedColor, brushSize]));
+
+  lastX = x;
+  lastY = y;
 });
 
 colorCanvas.addEventListener('pointerup', () => isDrawing = false);
 colorCanvas.addEventListener('pointercancel', () => isDrawing = false);
 
-function drawLine(ctx, x1, y1, x2, y2, color) {
+function drawLine(ctx, x1, y1, x2, y2, color, size) {
   ctx.strokeStyle = color;
-  ctx.lineWidth = 10;
+  ctx.lineWidth = size;
   ctx.lineCap = "round";
   ctx.beginPath();
   ctx.moveTo(x1, y1);
@@ -97,7 +108,6 @@ function drawLine(ctx, x1, y1, x2, y2, color) {
   ctx.stroke();
 }
 
-// Clear nur die Farbebene löschen, Linienbild bleibt
 clearBtn.addEventListener('click', () => {
   socket.send(JSON.stringify(['clear']));
   clearColors();
@@ -107,7 +117,7 @@ function clearColors() {
   colorCtx.clearRect(0, 0, colorCanvas.width, colorCanvas.height);
 }
 
-// WebSocket Event-Handling
+// WebSocket
 socket.addEventListener('open', () => {
   socket.send(JSON.stringify(['*enter-room*', 'ausmalbild']));
   socket.send(JSON.stringify(['*subscribe-client-count*']));
@@ -127,8 +137,8 @@ socket.addEventListener('message', (event) => {
       indexElem.innerText = `#${clientId}/${clientCount}`;
       break;
     case 'draw-line':
-      const [__, id, x1, y1, x2, y2, color] = data;
-      drawLine(colorCtx, x1, y1, x2, y2, color);
+      const [__, id, x1, y1, x2, y2, color, size] = data;
+      drawLine(colorCtx, x1, y1, x2, y2, color, size || 10);
       break;
     case 'clear':
       clearColors();

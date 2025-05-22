@@ -1,7 +1,7 @@
 body {
   margin: 0;
   overflow: hidden;
-  background-color: rgb(255, 255, 255);
+  background-color: white;
 }
 
 canvas {
@@ -11,57 +11,85 @@ canvas {
   width: 100%;
   height: 100%;
   display: block;
+  z-index: 0; /* Ganz im Hintergrund */
+}
+
+#lineart-layer {
+  z-index: 2;
+  pointer-events: none; /* Bild blockiert keine Klicks */
 }
 
 #color-layer {
   z-index: 1;
 }
 
-#lineart-layer {
-  z-index: 2;
-  pointer-events: none;
-}
-
-#color-layer {
-  z-index: 2;
-}
-
 #clear-btn {
-  position: absolute;
+  position: fixed;
   top: 10px;
   right: 10px;
-  z-index: 3;
+  z-index: 10;
   padding: 10px 20px;
   font-size: 1.2em;
 }
 
 #client-index {
-  position: absolute;
+  position: fixed;
   bottom: 10px;
   left: 10px;
-  color: white;
+  color: black;
   font-size: 1.5em;
-  z-index: 3;
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.7);
+  padding: 4px 8px;
+  border-radius: 5px;
 }
 
 #colorPicker {
-position: absolute;
-top: 10px;
-left: 10px;
-display: flex;
-gap: 8px;
-z-index: 10;
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.7);
+  padding: 5px;
+  border-radius: 5px;
 }
 
 .color-btn {
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  border: none;
+  border: 1px solid #999;
   cursor: pointer;
-  outline: none;
 }
 
 .color-btn:focus {
   outline: 2px solid #333;
+}
+
+#brush-size-container {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 10;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 8px;
+  border-radius: 5px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.2);
+}
+
+#brush-size-container label {
+  margin-bottom: 5px;
+  font-size: 0.9em;
+  color: #333;
+}
+
+#brush-size {
+  width: 150px;
+  cursor: pointer;
 }
