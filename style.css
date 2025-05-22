@@ -12,6 +12,7 @@ canvas {
   height: 100%;
   display: block;
   z-index: 0; /* Ganz im Hintergrund */
+  touch-action: none; /* Für bessere Touch-Unterstützung */
 }
 
 #lineart-layer {
@@ -21,15 +22,6 @@ canvas {
 
 #color-layer {
   z-index: 1;
-}
-
-#clear-btn {
-  position: fixed;
-  top: 10px;
-  right: 10px;
-  z-index: 10;
-  padding: 10px 20px;
-  font-size: 1.2em;
 }
 
 #client-index {
@@ -49,12 +41,32 @@ canvas {
   top: 10px;
   left: 10px;
   display: flex;
-  flex-direction: row;
+  flex-wrap: wrap;
   gap: 8px;
   z-index: 10;
   background-color: rgba(255, 255, 255, 0.7);
-  padding: 5px;
+  padding: 5px 10px 10px 10px; /* unten etwas mehr Platz für Button */
   border-radius: 5px;
+  align-items: center;
+}
+
+/* Löschen-Button unter Farbauswahl */
+#clear-btn {
+  margin-top: 5px;
+  width: 100%;
+  padding: 6px 0;
+  font-size: 1em;
+  cursor: pointer;
+  border: none;
+  border-radius: 5px;
+  background-color: #e74c3c;
+  color: white;
+  transition: background-color 0.3s ease;
+  user-select: none;
+}
+
+#clear-btn:hover {
+  background-color: #c0392b;
 }
 
 .color-btn {
@@ -63,6 +75,7 @@ canvas {
   border-radius: 50%;
   border: 1px solid #999;
   cursor: pointer;
+  user-select: none;
 }
 
 .color-btn:focus {
@@ -77,23 +90,61 @@ canvas {
   flex-direction: column;
   align-items: center;
   z-index: 10;
-  background-color: rgba(255, 255, 255, 0.8);
-  padding: 8px;
+  background-color: rgba(255, 255, 255, 0.85);
+  padding: 6px 10px;
   border-radius: 5px;
   box-shadow: 0 0 5px rgba(0,0,0,0.2);
+  user-select: none;
 }
 
 #brush-size-container label {
-  margin-bottom: 5px;
+  margin-bottom: 4px;
   font-size: 0.9em;
   color: #333;
 }
 
 #brush-size {
-  width: 150px;
+  width: 140px;
   cursor: pointer;
+  margin: 0;
+  padding: 0;
+  -webkit-appearance: none;
+  background: transparent;
+  height: 20px;
+  user-select: none;
 }
 
-canvas {
-  touch-action: none;
+/* Styling Slider Daumen und Track für bessere Optik */
+#brush-size::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  background: #3498db;
+  border-radius: 50%;
+  cursor: pointer;
+  margin-top: -7px;
+  box-shadow: 0 0 2px rgba(0,0,0,0.5);
+}
+
+#brush-size::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 6px;
+  background: #ddd;
+  border-radius: 3px;
+}
+
+#brush-size::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: #3498db;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 2px rgba(0,0,0,0.5);
+}
+
+#brush-size::-moz-range-track {
+  width: 100%;
+  height: 6px;
+  background: #ddd;
+  border-radius: 3px;
 }
