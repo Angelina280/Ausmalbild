@@ -3,6 +3,7 @@ let clientId = null;
 let selectedColor = "black";
 let clientCount = 0;
 
+// Optional: Farbauswahl-Buttons (wenn vorhanden)
 document.querySelectorAll(".color-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     selectedColor = btn.getAttribute("data-color");
@@ -17,33 +18,50 @@ const indexElem = document.getElementById('client-index');
 const lineartCtx = lineartCanvas.getContext('2d');
 const colorCtx = colorCanvas.getContext('2d');
 
-resizeCanvases();
-window.addEventListener('resize', resizeCanvases);
+const lineartImage = new Image();
+lineartImage.src = 'Drache.png'; // Dein PNG-Bild mit transparentem Hintergrund
+
+lineartImage.onload = () => {
+  resizeCanvases();
+  drawLineart();
+};
+
+window.addEventListener('resize', () => {
+  resizeCanvases();
+  drawLineart();
+});
 
 function resizeCanvases() {
   [lineartCanvas, colorCanvas].forEach(canvas => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
   });
-  drawLineart();
 }
 
+// Zeichne das PNG zentriert und skaliert auf die Linien-CANVAS
 function drawLineart() {
-  const ctx = lineartCtx;
-  ctx.clearRect(0, 0, lineartCanvas.width, lineartCanvas.height);
-  ctx.strokeStyle = 'white';
-  ctx.lineWidth = 4;
+  lineartCtx.clearRect(0, 0, lineartCanvas.width, lineartCanvas.height);
 
-  // Beispielzeichnung: Smiley
-  ctx.beginPath();
-  const cx = lineartCanvas.width / 2;
-  const cy = lineartCanvas.height / 2;
-  const r = 100;
-  ctx.arc(cx, cy, r, 0, 2 * Math.PI); // Kopf
-  ctx.moveTo(cx - 40, cy - 30); ctx.arc(cx - 40, cy - 30, 10, 0, 2 * Math.PI); // Auge links
-  ctx.moveTo(cx + 40, cy - 30); ctx.arc(cx + 40, cy - 30, 10, 0, 2 * Math.PI); // Auge rechts
-  ctx.moveTo(cx - 40, cy + 30); ctx.quadraticCurveTo(cx, cy + 60, cx + 40, cy + 30); // Mund
-  ctx.stroke();
+  const canvasWidth = lineartCanvas.width;
+  const canvasHeight = lineartCanvas.height;
+
+  const imgRatio = lineartImage.width / lineartImage.height;
+  const canvasRatio = canvasWidth / canvasHeight;
+
+  let drawWidth, drawHeight;
+
+  if (imgRatio > canvasRatio) {
+    drawWidth = canvasWidth;
+    drawHeight = canvasWidth / imgRatio;
+  } else {
+    drawHeight = canvasHeight;
+    drawWidth = canvasHeight * imgRatio;
+  }
+
+  const offsetX = (canvasWidth - drawWidth) / 2;
+  const offsetY = (canvasHeight - drawHeight) / 2;
+
+  lineartCtx.drawImage(lineartImage, offsetX, offsetY, drawWidth, drawHeight);
 }
 
 // Zeichnen mit Linie
@@ -79,7 +97,7 @@ function drawLine(ctx, x1, y1, x2, y2, color) {
   ctx.stroke();
 }
 
-// Clear
+// Clear nur die Farbebene löschen, Linienbild bleibt
 clearBtn.addEventListener('click', () => {
   socket.send(JSON.stringify(['clear']));
   clearColors();
@@ -89,7 +107,7 @@ function clearColors() {
   colorCtx.clearRect(0, 0, colorCanvas.width, colorCanvas.height);
 }
 
-// WebSocket
+// WebSocket Event-Handling
 socket.addEventListener('open', () => {
   socket.send(JSON.stringify(['*enter-room*', 'ausmalbild']));
   socket.send(JSON.stringify(['*subscribe-client-count*']));
