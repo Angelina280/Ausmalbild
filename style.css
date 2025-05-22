@@ -108,7 +108,7 @@ canvas {
   cursor: pointer;
   margin: 0;
   padding: 0;
-  -webkit-appearance: none;
+  
   background: transparent;
   height: 20px;
   user-select: none;

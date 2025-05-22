@@ -170,5 +170,7 @@ socket.addEventListener('message', (event) => {
     case 'clear':
       clearColors();
       break;
+
   }
+  
 });
