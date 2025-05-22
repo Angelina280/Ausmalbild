@@ -93,3 +93,7 @@ canvas {
   width: 150px;
   cursor: pointer;
 }
+
+canvas {
+  touch-action: none;
+}
