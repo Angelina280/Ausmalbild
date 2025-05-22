@@ -2,7 +2,7 @@ const socket = new WebSocket('https://nosch.uber.space/web-rooms/');
 let clientId = null;
 let selectedColor = "black";
 let clientCount = 0;
-let brushSize = 10;
+let brushSize = 10; // Standard-Pinselgröße
 
 // Farbauswahl
 document.querySelectorAll(".color-btn").forEach(btn => {
@@ -39,24 +39,17 @@ window.addEventListener('resize', () => {
 });
 
 function resizeCanvases() {
-  const dpr = window.devicePixelRatio || 1;
   [lineartCanvas, colorCanvas].forEach(canvas => {
-    canvas.width = window.innerWidth * dpr;
-    canvas.height = window.innerHeight * dpr;
-    canvas.style.width = window.innerWidth + 'px';
-    canvas.style.height = window.innerHeight + 'px';
-    const ctx = canvas.getContext('2d');
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.scale(dpr, dpr);
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
   });
 }
 
 function drawLineart() {
-  const dpr = window.devicePixelRatio || 1;
   lineartCtx.clearRect(0, 0, lineartCanvas.width, lineartCanvas.height);
 
-  const canvasWidth = lineartCanvas.width / dpr;
-  const canvasHeight = lineartCanvas.height / dpr;
+  const canvasWidth = lineartCanvas.width;
+  const canvasHeight = lineartCanvas.height;
 
   const imgRatio = lineartImage.width / lineartImage.height;
   const canvasRatio = canvasWidth / canvasHeight;
@@ -77,42 +70,60 @@ function drawLineart() {
   lineartCtx.drawImage(lineartImage, offsetX, offsetY, drawWidth, drawHeight);
 }
 
-// Zeichnen
+// Zeichnen (mit Touch-Support)
 let isDrawing = false;
 let lastX = 0;
 let lastY = 0;
 
-// ✨ Touch-Gesten verhindern Scrollen auf Mobilgeräten
-colorCanvas.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+// Touch-Events verhindern Scrollen/Zoom auf Canvas
+['touchstart', 'touchmove', 'touchend', 'touchcancel'].forEach(event => {
+  colorCanvas.addEventListener(event, e => e.preventDefault(), { passive: false });
+});
 
-// Position berechnen
+// Position aus Maus/Touch ermitteln
 function getPointerPosition(e) {
   const rect = colorCanvas.getBoundingClientRect();
+  let clientX, clientY;
+
+  if (e.touches && e.touches[0]) {
+    clientX = e.touches[0].clientX;
+    clientY = e.touches[0].clientY;
+  } else {
+    clientX = e.clientX;
+    clientY = e.clientY;
+  }
+
   return {
-    x: e.clientX - rect.left,
-    y: e.clientY - rect.top
+    x: clientX - rect.left,
+    y: clientY - rect.top
   };
 }
 
-colorCanvas.addEventListener('pointerdown', (e) => {
+function startDrawing(e) {
   isDrawing = true;
   const pos = getPointerPosition(e);
   lastX = pos.x;
   lastY = pos.y;
-});
+}
 
-colorCanvas.addEventListener('pointermove', (e) => {
+function draw(e) {
   if (!isDrawing) return;
   const pos = getPointerPosition(e);
   drawLine(colorCtx, lastX, lastY, pos.x, pos.y, selectedColor, brushSize);
   socket.send(JSON.stringify(['draw-line', clientId, lastX, lastY, pos.x, pos.y, selectedColor, brushSize]));
   lastX = pos.x;
   lastY = pos.y;
-});
+}
 
-colorCanvas.addEventListener('pointerup', () => isDrawing = false);
-colorCanvas.addEventListener('pointercancel', () => isDrawing = false);
-colorCanvas.addEventListener('pointerout', () => isDrawing = false); // Finger verlässt die Fläche
+function stopDrawing() {
+  isDrawing = false;
+}
+
+colorCanvas.addEventListener('pointerdown', startDrawing);
+colorCanvas.addEventListener('pointermove', draw);
+colorCanvas.addEventListener('pointerup', stopDrawing);
+colorCanvas.addEventListener('pointercancel', stopDrawing);
+colorCanvas.addEventListener('pointerout', stopDrawing);
 
 function drawLine(ctx, x1, y1, x2, y2, color, size) {
   ctx.strokeStyle = color;
@@ -133,7 +144,7 @@ function clearColors() {
   colorCtx.clearRect(0, 0, colorCanvas.width, colorCanvas.height);
 }
 
-// WebSocket-Logik
+// WebSocket
 socket.addEventListener('open', () => {
   socket.send(JSON.stringify(['*enter-room*', 'ausmalbild']));
   socket.send(JSON.stringify(['*subscribe-client-count*']));
