@@ -1,7 +1,13 @@
 const socket = new WebSocket('https://nosch.uber.space/web-rooms/');
 let clientId = null;
-let clientColor = getRandomColor();
+let selectedColor = "black";
 let clientCount = 0;
+
+document.querySelectorAll(".color-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    selectedColor = btn.getAttribute("data-color");
+  });
+})
 
 const lineartCanvas = document.getElementById('lineart-layer');
 const colorCanvas = document.getElementById('color-layer');
@@ -56,8 +62,8 @@ function drawPoint(e) {
   const x = e.clientX;
   const y = e.clientY;
 
-  drawDot(colorCtx, x, y, clientColor);
-  socket.send(JSON.stringify(['draw', clientId, x, y, clientColor]));
+  drawDot(colorCtx, x, y, selectedColor);
+  socket.send(JSON.stringify(['draw', clientId, x, y, selectedColor]));
 }
 
 function drawDot(ctx, x, y, color) {
@@ -106,10 +112,10 @@ socket.addEventListener('message', (event) => {
   }
 });
 
-function getRandomColor() {
-  const hue = Math.floor(Math.random() * 360);
-  return `hsl(${hue}, 100%, 50%)`;
+function getColor() {
+  return selectedColor;
 }
+
 
 
 //test 
