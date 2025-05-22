@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="de">
+
+<head>
+  <meta charset="utf-8">
+  <title>Multiplayer Ausmalbild</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="Drache.js" defer></script>
+</head>
+
+<body>
+    <canvas id="color-layer"></canvas>
+    <canvas id="lineart-layer"></canvas>
+    <button id="clear-btn">Löschen</button>
+    <div id="colorPicker">
+      <button class="color-btn" style="background-color: blue;"   data-color="blue"></button>
+      <button class="color-btn" style="background-color: red;"    data-color="red"></button>
+      <button class="color-btn" style="background-color: yellow;" data-color="yellow"></button>
+      <button class="color-btn" style="background-color: purple;" data-color="purple"></button>
+      <button class="color-btn" style="background-color: orange;" data-color="orange"></button>
+      <button class="color-btn" style="background-color: rgb(71, 37, 5);"  data-color="brown"></button>
+      <button class="color-btn" style="background-color: green;"  data-color="green"></button>
+      <button class="color-btn" style="background-color: grey;"  data-color="grey"></button>
+      <button class="color-btn" style="background-color: white; border: 1px solid #ccc;" data-color="white">🧽</button>
+    </div>    
+    <div id="client-index"></div>
+
+<div id="brush-size-container">
+  <label for="brush-size" style="writing-mode: vertical-rl; transform: rotate(180deg); margin-bottom: 5px;"></label>
+  <input type="range" id="brush-size" min="3" max="50" value="10" step="1" style="writing-mode: bt-lr; height: 150px;">
+</div>
+
+
+
+</body>
+
+</html>
