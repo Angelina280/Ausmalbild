@@ -26,15 +26,17 @@
 
 @media (max-width: 600px) {
     #headline {
-        font-size: 2rem; /* Kleiner für Handy */
+        font-size: 2.4rem; /* Kleiner für Handy */
     }
 
     #images {
         flex-direction: column;
         gap: 0;
-        margin-top: 180px;
+        margin-top: 40px;
     }
-
+    #choice
+    font-size: 2rem;
+}
     .bild-abstand {
         display: block;
         margin: 10px 0;
@@ -47,23 +49,4 @@
     transform: scale(1.09);
     box-shadow: 0 10px 30px rgba(16, 248, 8, 0.548);
     cursor: pointer;
-}
-
-/* Mobile-Ansicht: Bilder untereinander anordnen */
-@media (max-width: 600px) {
-    #images {
-        white-space: normal;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin-top: 180px
-    }
-
-    .bild-abstand {
-        display: block;
-        margin: 10px 0;
-        width: 80vw;   /* Bilder passen sich der Bildschirmbreite an */
-        max-width: 200px;
-        height: auto;
-    }
 }
