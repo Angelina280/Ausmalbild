@@ -1,6 +1,6 @@
 #headline {
     text-align: center;
-    font-size: 5rem;
+    font-size: 4rem;
     font-weight: bold;
     background: linear-gradient(90deg, red, orange, yellow, green, blue, violet);
     background-size: 55% 100%; /* Verlängert den Verlauf */
@@ -17,18 +17,32 @@
 }
 
 #images {
-    margin-top: 5%;
-    white-space: nowrap;
-    overflow-x: auto;
-    text-align: center; /* zentriert Bilder auf großen Bildschirmen */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 24px; /* Abstand zwischen den Bildern */
+    margin-top: 40px;
 }
 
-.bild-abstand {
-    display: inline-block;
-    margin: 0 10px;
-    vertical-align: top;
-}
+@media (max-width: 600px) {
+    #headline {
+        font-size: 2rem; /* Kleiner für Handy */
+    }
 
+    #images {
+        flex-direction: column;
+        gap: 0;
+        margin-top: 180px;
+    }
+
+    .bild-abstand {
+        display: block;
+        margin: 10px 0;
+        width: 80vw;
+        max-width: 200px;
+        height: auto;
+    }
+}
 .bild-abstand:hover {
     transform: scale(1.09);
     box-shadow: 0 10px 30px rgba(16, 248, 8, 0.548);
