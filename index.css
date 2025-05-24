@@ -34,9 +34,11 @@
         gap: 0;
         margin-top: 40px;
     }
-    #choice
-    font-size: 2rem;
-}
+
+    #choice {
+        font-size: 2rem;
+    }
+
     .bild-abstand {
         display: block;
         margin: 10px 0;
@@ -45,8 +47,9 @@
         height: auto;
     }
 }
+
 .bild-abstand:hover {
     transform: scale(1.09);
     box-shadow: 0 10px 30px rgba(16, 248, 8, 0.548);
     cursor: pointer;
-}
+  }
