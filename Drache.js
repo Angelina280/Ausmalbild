@@ -180,12 +180,13 @@ socket.addEventListener('message', (event) => {
       break;
     case 'draw-line': {
       const [__, id, relX1, relY1, relX2, relY2, color, size] = data;
-      // In Pixel umrechnen
-      const x1 = relX1 * colorCanvas.width;
-      const y1 = relY1 * colorCanvas.height;
-      const x2 = relX2 * colorCanvas.width;
-      const y2 = relY2 * colorCanvas.height;
-      drawLine(colorCtx, x1, y1, x2, y2, color, size || 10);
+      if (id !== clientId) { // Nur Linien von anderen zeichnen!
+        const x1 = relX1 * colorCanvas.width;
+        const y1 = relY1 * colorCanvas.height;
+        const x2 = relX2 * colorCanvas.width;
+        const y2 = relY2 * colorCanvas.height;
+        drawLine(colorCtx, x1, y1, x2, y2, color, size || 10);
+      }
       break;
     }
     case 'clear':
