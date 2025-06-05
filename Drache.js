@@ -109,8 +109,23 @@ function startDrawing(e) {
 function draw(e) {
   if (!isDrawing) return;
   const pos = getPointerPosition(e);
+
+  // Relativ zur Canvas-Größe senden
+  const relLastX = lastX / colorCanvas.width;
+  const relLastY = lastY / colorCanvas.height;
+  const relX = pos.x / colorCanvas.width;
+  const relY = pos.y / colorCanvas.height;
+
   drawLine(colorCtx, lastX, lastY, pos.x, pos.y, selectedColor, brushSize);
-  socket.send(JSON.stringify(['draw-line', clientId, lastX, lastY, pos.x, pos.y, selectedColor, brushSize]));
+
+  socket.send(JSON.stringify([
+    'draw-line',
+    clientId,
+    relLastX, relLastY, relX, relY,
+    selectedColor,
+    brushSize
+  ]));
+
   lastX = pos.x;
   lastY = pos.y;
 }
@@ -163,14 +178,18 @@ socket.addEventListener('message', (event) => {
       clientCount = data[1];
       indexElem.innerText = `#${clientId}/${clientCount}`;
       break;
-    case 'draw-line':
-      const [__, id, x1, y1, x2, y2, color, size] = data;
+    case 'draw-line': {
+      const [__, id, relX1, relY1, relX2, relY2, color, size] = data;
+      // In Pixel umrechnen
+      const x1 = relX1 * colorCanvas.width;
+      const y1 = relY1 * colorCanvas.height;
+      const x2 = relX2 * colorCanvas.width;
+      const y2 = relY2 * colorCanvas.height;
       drawLine(colorCtx, x1, y1, x2, y2, color, size || 10);
       break;
+    }
     case 'clear':
       clearColors();
       break;
-
   }
-  
 });
