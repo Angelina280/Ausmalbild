@@ -2,7 +2,7 @@ let selectedColor = "black";
 let clientCount = 0;
 let brushSize = 10; // Standard-Pinselgröße
 
-let roomName = 'ausmalbild';
+let roomName = 'Drache';
 let serverURL = 'wss://nosch.uber.space/web-rooms/';
 let socket = new WebSocket(serverURL);
 let clientId = null;
@@ -147,13 +147,17 @@ function clearColors() {
   colorCtx.clearRect(0, 0, colorCanvas.width, colorCanvas.height);
 }
 
-// WebSocket
+// WebSocket öffnen
 socket.addEventListener('open', () => {
-  socket.send(JSON.stringify(['*enter-room*', 'ausmalbild']));
+  socket.send(JSON.stringify(['*enter-room*', 'Drache']));
   socket.send(JSON.stringify(['*subscribe-client-count*']));
+  // ggf. weitere Subscriptions
+  setInterval(() => socket.send(''), 30000); // Verbindung halten
 });
 
+// Zentraler Nachrichten-Handler
 socket.addEventListener('message', (event) => {
+  if (!event.data) return;
   const data = JSON.parse(event.data);
   const cmd = data[0];
 
@@ -166,70 +170,48 @@ socket.addEventListener('message', (event) => {
       clientCount = data[1];
       indexElem.innerText = `#${clientId}/${clientCount}`;
       break;
-    case 'draw-line':
+    case 'draw-line': {
       const [__, id, x1, y1, x2, y2, color, size] = data;
-      drawLine(colorCtx, x1, y1, x2, y2, color, size || 10);
+      if (id !== clientId) { // Nur Linien der anderen Spieler zeichnen
+        drawLine(colorCtx, x1, y1, x2, y2, color, size || 10);
+      }
       break;
+    }
     case 'clear':
       clearColors();
       break;
-
+    // Weitere Fälle aus deinem Multiplayer-Code:
+    case 'client-id':
+      clientId = data[1];
+      player.id = clientId;
+      sendMessage('broadcast-message', ['position', player]);
+      draw();
+      break;
+    case 'position': {
+      const other = data[1];
+      if (other.id !== clientId) {
+        if (!otherPlayers[other.id]) {
+          otherPlayers[other.id] = other;
+        } else {
+          otherPlayers[other.id].direction = other.direction;
+          otherPlayers[other.id].body[0] = other.body[0];
+        }
+      }
+      break;
+    }
+    case 'client-exit': {
+      const leftId = data[1];
+      delete otherPlayers[leftId];
+      break;
+    }
+    case 'error':
+      console.warn('Server error:', data[1]);
+      break;
   }
-  
 });
 
 //Nachricht an Server
 function sendMessage(...msg) {
   socket.send(JSON.stringify(msg));
+  console.log("Message vom Server gesendet:", msg);
 }
-
-socket.addEventListener('open', () => {
-  sendMessage('enter-room', roomName); // Raum betreten
-  sendMessage('subscribe-client-count'); //Spieleranzahl abonnieren
-  sendMessage('subscribe-client-enter-exit'); // Beitritte/Verlassen abonnieren
-  setInterval(() => socket.send(''), 30000); // Verbindung halten
-});
-
-socket.addEventListener('message', (event) => {
-  if (!event.data) return;
-  const msg = JSON.parse(event.data);
-  const type = msg[0];
-
-  switch (type) {
-    case 'client-id':
-      clientId = msg[1];
-      player.id = clientId;
-      sendMessage('broadcast-message', ['position', player]);
-      draw();
-      break;
-
-   case 'position':
-  const other = msg[1];
-  if (other.id !== clientId) {
-    if (!otherPlayers[other.id]) {
-      // Falls Spieler neu ist, initialisieren
-      otherPlayers[other.id] = other;
-    } else {
-      // Nur direction und Position updaten
-      otherPlayers[other.id].direction = other.direction;
-
-      // Option 1: Nur Kopfposition aktualisieren (nicht ganze body überschreiben)
-    
-
-      // Option 2 (besser sichtbar): Nehme nur body[0] vom Server und ergänze die Schlange lokal
-      otherPlayers[other.id].body[0] = other.body[0];
-    }
-  }
-  break;
-
-
-    case 'client-exit':
-      const leftId = msg[1];
-      delete otherPlayers[leftId];
-      break;
-
-    case 'error':
-      console.warn('Server error:', msg[1]);
-      break;
-  }
-});
