@@ -1,24 +1,11 @@
 let selectedColor = "black";
 let clientCount = 0;
-let brushSize = 10; // Standard-Pinselgröße
+let brushSize = 10;
 
 let roomName = 'Drache';
 let serverURL = 'wss://nosch.uber.space/web-rooms/';
 let socket = new WebSocket(serverURL);
 let clientId = null;
-
-// Farbauswahl
-document.querySelectorAll(".color-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    selectedColor = btn.getAttribute("data-color");
-  });
-});
-
-// Pinselgrößen-Slider
-const brushSizeSlider = document.getElementById("brush-size");
-brushSizeSlider.addEventListener("input", () => {
-  brushSize = parseInt(brushSizeSlider.value, 10);
-});
 
 const lineartCanvas = document.getElementById('lineart-layer');
 const colorCanvas = document.getElementById('color-layer');
@@ -28,9 +15,22 @@ const indexElem = document.getElementById('client-index');
 const lineartCtx = lineartCanvas.getContext('2d');
 const colorCtx = colorCanvas.getContext('2d');
 
+// Farbauswahl
+document.querySelectorAll(".color-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    selectedColor = btn.getAttribute("data-color");
+  });
+});
+
+// Pinselgröße
+const brushSizeSlider = document.getElementById("brush-size");
+brushSizeSlider.addEventListener("input", () => {
+  brushSize = parseInt(brushSizeSlider.value, 10);
+});
+
+// Lineart-Bild
 const lineartImage = new Image();
 lineartImage.src = 'Drache.png';
-
 lineartImage.onload = () => {
   resizeCanvases();
   drawLineart();
@@ -49,57 +49,43 @@ function resizeCanvases() {
 }
 
 function drawLineart() {
-  lineartCtx.clearRect(0, 0, lineartCanvas.width, lineartCanvas.height);
+  const cw = lineartCanvas.width;
+  const ch = lineartCanvas.height;
+  const ratio = lineartImage.width / lineartImage.height;
+  const canvasRatio = cw / ch;
 
-  const canvasWidth = lineartCanvas.width;
-  const canvasHeight = lineartCanvas.height;
-
-  const imgRatio = lineartImage.width / lineartImage.height;
-  const canvasRatio = canvasWidth / canvasHeight;
-
-  let drawWidth, drawHeight;
-
-  if (imgRatio > canvasRatio) {
-    drawWidth = canvasWidth;
-    drawHeight = canvasWidth / imgRatio;
+  let dw, dh;
+  if (ratio > canvasRatio) {
+    dw = cw;
+    dh = cw / ratio;
   } else {
-    drawHeight = canvasHeight;
-    drawWidth = canvasHeight * imgRatio;
+    dh = ch;
+    dw = ch * ratio;
   }
 
-  const offsetX = (canvasWidth - drawWidth) / 2;
-  const offsetY = (canvasHeight - drawHeight) / 2;
+  const offsetX = (cw - dw) / 2;
+  const offsetY = (ch - dh) / 2;
 
-  lineartCtx.drawImage(lineartImage, offsetX, offsetY, drawWidth, drawHeight);
+  lineartCtx.clearRect(0, 0, cw, ch);
+  lineartCtx.drawImage(lineartImage, offsetX, offsetY, dw, dh);
 }
 
-// Zeichnen (mit Touch-Support)
+// Zeichnen
 let isDrawing = false;
 let lastX = 0;
 let lastY = 0;
 
-// Touch-Events verhindern Scrollen/Zoom auf Canvas
-['touchstart', 'touchmove', 'touchend', 'touchcancel'].forEach(event => {
-  colorCanvas.addEventListener(event, e => e.preventDefault(), { passive: false });
-});
-
-// Position aus Maus/Touch ermitteln
 function getPointerPosition(e) {
   const rect = colorCanvas.getBoundingClientRect();
-  let clientX, clientY;
-
-  if (e.touches && e.touches[0]) {
-    clientX = e.touches[0].clientX;
-    clientY = e.touches[0].clientY;
+  let x, y;
+  if (e.touches) {
+    x = e.touches[0].clientX - rect.left;
+    y = e.touches[0].clientY - rect.top;
   } else {
-    clientX = e.clientX;
-    clientY = e.clientY;
+    x = e.clientX - rect.left;
+    y = e.clientY - rect.top;
   }
-
-  return {
-    x: clientX - rect.left,
-    y: clientY - rect.top
-  };
+  return { x, y };
 }
 
 function startDrawing(e) {
@@ -112,8 +98,24 @@ function startDrawing(e) {
 function draw(e) {
   if (!isDrawing) return;
   const pos = getPointerPosition(e);
+
+  const relX1 = lastX / colorCanvas.width;
+  const relY1 = lastY / colorCanvas.height;
+  const relX2 = pos.x / colorCanvas.width;
+  const relY2 = pos.y / colorCanvas.height;
+
   drawLine(colorCtx, lastX, lastY, pos.x, pos.y, selectedColor, brushSize);
-  socket.send(JSON.stringify(['draw-line', clientId, lastX, lastY, pos.x, pos.y, selectedColor, brushSize]));
+
+  if (socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify([
+      'draw-line',
+      clientId,
+      relX1, relY1, relX2, relY2,
+      selectedColor,
+      brushSize
+    ]));
+  }
+
   lastX = pos.x;
   lastY = pos.y;
 }
@@ -128,6 +130,7 @@ colorCanvas.addEventListener('pointerup', stopDrawing);
 colorCanvas.addEventListener('pointercancel', stopDrawing);
 colorCanvas.addEventListener('pointerout', stopDrawing);
 
+// Linie zeichnen
 function drawLine(ctx, x1, y1, x2, y2, color, size) {
   ctx.strokeStyle = color;
   ctx.lineWidth = size;
@@ -138,28 +141,29 @@ function drawLine(ctx, x1, y1, x2, y2, color, size) {
   ctx.stroke();
 }
 
+// Löschen
 clearBtn.addEventListener('click', () => {
-  socket.send(JSON.stringify(['clear']));
   clearColors();
+  socket.send(JSON.stringify(['clear']));
 });
 
 function clearColors() {
   colorCtx.clearRect(0, 0, colorCanvas.width, colorCanvas.height);
 }
 
-// WebSocket öffnen
+// WebSocket-Setup
 socket.addEventListener('open', () => {
-  socket.send(JSON.stringify(['*enter-room*', 'Drache']));
+  socket.send(JSON.stringify(['*enter-room*', roomName]));
   socket.send(JSON.stringify(['*subscribe-client-count*']));
-  // ggf. weitere Subscriptions
-  setInterval(() => socket.send(''), 30000); // Verbindung halten
+  setInterval(() => socket.send(''), 30000); // Keep alive
+  console.log("✅ WebSocket verbunden");
 });
 
-// Zentraler Nachrichten-Handler
 socket.addEventListener('message', (event) => {
   if (!event.data) return;
   const data = JSON.parse(event.data);
   const cmd = data[0];
+  console.log("📩 Empfangen:", data);
 
   switch (cmd) {
     case '*client-id*':
@@ -172,46 +176,24 @@ socket.addEventListener('message', (event) => {
       break;
     case 'draw-line': {
       const [__, id, x1, y1, x2, y2, color, size] = data;
-      if (id !== clientId) { // Nur Linien der anderen Spieler zeichnen
-        drawLine(colorCtx, x1, y1, x2, y2, color, size || 10);
+      if (id !== clientId) {
+        drawLine(
+          colorCtx,
+          x1 * colorCanvas.width,
+          y1 * colorCanvas.height,
+          x2 * colorCanvas.width,
+          y2 * colorCanvas.height,
+          color,
+          size || 10
+        );
       }
       break;
     }
     case 'clear':
       clearColors();
       break;
-    // Weitere Fälle aus deinem Multiplayer-Code:
-    case 'client-id':
-      clientId = data[1];
-      player.id = clientId;
-      sendMessage('broadcast-message', ['position', player]);
-      draw();
-      break;
-    case 'position': {
-      const other = data[1];
-      if (other.id !== clientId) {
-        if (!otherPlayers[other.id]) {
-          otherPlayers[other.id] = other;
-        } else {
-          otherPlayers[other.id].direction = other.direction;
-          otherPlayers[other.id].body[0] = other.body[0];
-        }
-      }
-      break;
-    }
-    case 'client-exit': {
-      const leftId = data[1];
-      delete otherPlayers[leftId];
-      break;
-    }
     case 'error':
-      console.warn('Server error:', data[1]);
+      console.warn('⚠️ Serverfehler:', data[1]);
       break;
   }
 });
-
-//Nachricht an Server
-function sendMessage(...msg) {
-  socket.send(JSON.stringify(msg));
-  console.log("Message vom Server gesendet:", msg);
-}
