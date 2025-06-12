@@ -7,6 +7,11 @@ let serverURL = 'wss://nosch.uber.space/web-rooms/';
 let socket = new WebSocket(serverURL);
 let clientId = null;
 
+let imageOffsetX = 0;
+let imageOffsetY = 0;
+let imageDrawWidth = 0;
+let imageDrawHeight = 0;
+
 const lineartCanvas = document.getElementById('lineart-layer');
 const colorCanvas = document.getElementById('color-layer');
 const clearBtn = document.getElementById('clear-btn');
@@ -63,8 +68,13 @@ function drawLineart() {
     dw = ch * ratio;
   }
 
-  const offsetX = (cw - dw) / 2;
-  const offsetY = (ch - dh) / 2;
+const offsetX = (cw - dw) / 2;
+const offsetY = (ch - dh) / 2;
+
+imageOffsetX = offsetX;
+imageOffsetY = offsetY;
+imageDrawWidth = dw;
+imageDrawHeight = dh;
 
   lineartCtx.clearRect(0, 0, cw, ch);
   lineartCtx.drawImage(lineartImage, offsetX, offsetY, dw, dh);
@@ -182,10 +192,10 @@ socket.addEventListener('message', (event) => {
       if (id !== clientId) {
         drawLine(
           colorCtx,
-          x1 * colorCanvas.width,
-          y1 * colorCanvas.height,
-          x2 * colorCanvas.width,
-          y2 * colorCanvas.height,
+          x1 * imageDrawWidth + imageOffsetX,
+          y1 * imageDrawHeight + imageOffsetY,
+          x2 * imageDrawWidth + imageOffsetX,
+          y2 * imageDrawHeight + imageOffsetY,
           color,
           size || 10
         );
