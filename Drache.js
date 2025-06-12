@@ -108,11 +108,14 @@ function draw(e) {
 
   if (socket.readyState === WebSocket.OPEN) {
     socket.send(JSON.stringify([
-      'draw-line',
-      clientId,
-      relX1, relY1, relX2, relY2,
-      selectedColor,
-      brushSize
+      '*broadcast-message*',
+      [
+        'draw-line',
+        clientId,
+        relX1, relY1, relX2, relY2,
+        selectedColor,
+        brushSize
+      ]
     ]));
   }
 
