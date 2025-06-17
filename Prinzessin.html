@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="de">
+
+<head>
+  <meta charset="utf-8">
+  <title>Multiplayer Ausmalbild</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="Prinzessin.js" defer></script>
+</head>
+
+<body>
+  <canvas id="color-layer"></canvas>
+  <canvas id="lineart-layer"></canvas>
+
+  <div id="colorPicker">
+    <button class="color-btn" style="background-color: blue;" data-color="blue"></button>
+    <button class="color-btn" style="background-color: red;" data-color="red"></button>
+    <button class="color-btn" style="background-color: yellow;" data-color="yellow"></button>
+    <button class="color-btn" style="background-color: orange;" data-color="orange"></button>
+    <button class="color-btn" style="background-color: purple;" data-color="purple"></button>
+    <button class="color-btn" style="background-color: rgb(255, 0, 179);" data-color="rgb(255, 0, 179)"></button>
+    <button class="color-btn" style="background-color: lightsalmon;" data-color="lightsalmon"></button>
+    <button class="color-btn" style="background-color: green;" data-color="green"></button>
+    <button class="color-btn" style="background-color: brown;" data-color="brown"></button>
+    <button class="color-btn" style="background-color: white; border: 1px solid #ccc;" data-color="white">🧽</button>
+    <button id="clear-btn">Löschen</button> 
+  </div>
+
+  <div id="client-index"></div>
+
+  <div id="brush-size-container">
+    <input type="range" id="brush-size" min="1" max="50" value="10" step="1">
+  </div>
+</body>
+
+</html>
